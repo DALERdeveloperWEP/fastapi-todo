@@ -7,7 +7,7 @@ router = APIRouter()
 router.include_router(auth_router)
 router.include_router(user_router)
 
-@router.get('/')
+
+@router.get("/")
 def euandunwd():
-    return {'awjd aw': 'a'}
-    
+    return {"awjd aw": "a"}

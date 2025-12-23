@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase, declarative_base
 from .config import settings
 
 url = URL.create(
-    drivername='postgresql+psycopg2',
+    drivername="postgresql+psycopg2",
     username=settings.db_user,
     password=settings.db_pass,
     host=settings.db_host,
@@ -15,5 +15,3 @@ url = URL.create(
 engine = create_engine(url=url)
 Base: DeclarativeBase = declarative_base()
 SessionLocal = sessionmaker(bind=engine)
-
-

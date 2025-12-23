@@ -9,12 +9,11 @@ class UserRegister(BaseModel):
     username: Annotated[str, Field(min_length=5, max_length=64)]
     password: Annotated[str, Field(min_length=8, max_length=20)]
     confirm: Annotated[str, Field(min_length=8, max_length=20)]
-    
-    
-    @model_validator(mode='after')
+
+    @model_validator(mode="after")
     def check_passwords_match(self) -> Self:
         if self.password != self.confirm:
-            raise ValueError('Passwords do not match')
+            raise ValueError("Passwords do not match")
         return self
 
 
@@ -23,3 +22,15 @@ class UserResponse(BaseModel):
     username: Annotated[str, Field(min_length=5, max_length=64)]
     password: Annotated[str, Field(min_length=8, max_length=128)]
     role: Role
+
+
+class ProfileResults(BaseModel):
+    task_count: int
+    task_todo: int
+    task_doing: int
+    task_done: int
+    
+
+class UserProfile(BaseModel):
+    user: UserResponse
+    result: ProfileResults

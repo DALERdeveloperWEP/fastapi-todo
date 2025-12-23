@@ -2,6 +2,7 @@ from enum import Enum
 from datetime import datetime
 
 from sqlalchemy import String, DateTime, Column, Integer, Enum as SQLEnum
+from sqlalchemy.orm import relationship
 
 from ..core.database import Base
 
@@ -20,6 +21,8 @@ class User(Base):
     username = Column(String(length=64), unique=True, nullable=False)
     password = Column(String(length=128), nullable=False)
     role = Column(SQLEnum(Role), default=Role.USER, nullable=False)
+    
+    tasks = relationship('Task', back_populates='user')
     
     create_at = Column(DateTime, default=datetime.now)
     update_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

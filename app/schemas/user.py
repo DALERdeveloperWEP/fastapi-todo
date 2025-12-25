@@ -29,7 +29,7 @@ class ProfileResults(BaseModel):
     task_todo: int
     task_doing: int
     task_done: int
-    
+
 
 class UserProfile(BaseModel):
     user: UserResponse

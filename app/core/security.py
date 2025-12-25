@@ -23,7 +23,9 @@ def create_token(user_id: str) -> Dict[str, str]:
 
 def verify_token(token: str) -> dict:
     try:
-        decode_token = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-        return decode_token if decode_token['expires'] > time() else None
+        decode_token = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
+        return decode_token if decode_token["expires"] > time() else None
     except:
         return None

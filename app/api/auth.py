@@ -10,7 +10,7 @@ from ..core.security import hash_password, create_token, verify_password
 from ..schemas.user import UserRegister, UserResponse
 from ..models.user import User
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBasic()
 
 

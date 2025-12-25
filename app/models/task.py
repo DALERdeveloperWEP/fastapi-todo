@@ -21,7 +21,6 @@ class TaskStatus(int, Enum):
     DONE = 3
 
 
-
 class Category(Base):
     __tablename__ = "categories"
 

@@ -22,9 +22,8 @@ def create_categories(
     color: Annotated[str, Form()],
     icon: Annotated[UploadFile, File()],
     db: Annotated[Session, Depends(get_db)],
-    admin: Annotated[User, Depends(get_admin)]
+    admin: Annotated[User, Depends(get_admin)],
 ) -> CategoryResponse:
-
     existing_category = db.query(Category).filter(Category.name == name).first()
     if existing_category:
         raise HTTPException(
@@ -66,15 +65,17 @@ def create_categories(
 
 @router.get("/", response_model=List[CategoryResponse])
 def get_category_list(
-    db: Annotated[Session, Depends(get_db)], user: Annotated[User, Depends(get_curent_user)]
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[User, Depends(get_curent_user)],
 ) -> List[CategoryResponse]:
     return db.query(Category).all()
 
 
 @router.get("/{pk}", status_code=status.HTTP_200_OK, response_model=CategoryResponse)
 def get_one_category(
-    pk: int, user: Annotated[User, Depends(get_curent_user)], 
-    db: Annotated[Session, Depends(get_db)]
+    pk: int,
+    user: Annotated[User, Depends(get_curent_user)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> CategoryResponse:
     category = db.query(Category).get(pk)
     if not category:
@@ -87,38 +88,35 @@ def get_one_category(
 @router.put("/{pk}", status_code=status.HTTP_200_OK, response_model=CategoryResponse)
 def update_category(
     pk: int,
-    admin: Annotated[User, Depends(get_admin)], 
+    admin: Annotated[User, Depends(get_admin)],
     db: Annotated[Session, Depends(get_db)],
     name: Annotated[str | None, Form()] = None,
     color: Annotated[str, Form()] = None,
-    icon: Annotated[UploadFile | None, File()] = None
+    icon: Annotated[UploadFile | None, File()] = None,
 ) -> CategoryResponse:
     category = db.query(Category).get(pk)
-    
-    
+
     if name is None and color is None and icon is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided for update."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No data provided for update.",
         )
-    
-    
+
     if not category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found."
         )
-    
-    
+
     update_name = name
     update_color = color
     update_icon = icon
-    
+
     if update_name:
         category.name = name
-    
+
     if update_color:
         category.color = color
-    
-    
+
     if update_icon:
         img_types = {
             "image/jpeg": {"jpg"},
@@ -136,39 +134,37 @@ def update_category(
 
         if not file_type:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="File type is not supported"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File type is not supported",
             )
 
         icon_path = f"media/icon/{str(uuid1())}.{file_type}"
 
         with open(icon_path, "wb") as buffer:
             shutil.copyfileobj(icon.file, buffer)
-        
-        os.remove(category.icon)
-        
-        category.icon = icon_path
 
+        os.remove(category.icon)
+
+        category.icon = icon_path
 
     db.commit()
     db.refresh(category)
-    return category     
+    return category
 
 
 @router.delete("/{pk}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(
     pk: int,
-    admin: Annotated[User, Depends(get_admin)], 
-    db: Annotated[Session, Depends(get_db)]
+    admin: Annotated[User, Depends(get_admin)],
+    db: Annotated[Session, Depends(get_db)],
 ):
     category = db.query(Category).get(pk)
-    
+
     if not category:
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found."
         )
-    
+
     db.delete(category)
     db.commit()
-    return {"detail": "Category deleted successfully."}    
-
-    
+    return {"detail": "Category deleted successfully."}

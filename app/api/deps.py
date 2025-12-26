@@ -28,18 +28,23 @@ def get_curent_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token."
         )
-    
+
     return user
 
 
 def get_user(user: Annotated[User, Depends(get_curent_user)]) -> User:
     if not user.is_user:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission dendied.")
-        
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission dendied."
+        )
+
     return user
+
 
 def get_admin(admin: Annotated[User, Depends(get_curent_user)]) -> User:
     if not admin.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission dendied.")
-        
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permission dendied."
+        )
+
     return admin

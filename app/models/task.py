@@ -56,6 +56,7 @@ class Task(Base):
     sub_tasks = relationship("SubTask", back_populates="task")
     category = relationship("Category", back_populates="tasks")
     user = relationship("User", back_populates="tasks")
+    attechments = relationship("Attechment", back_populates="task")
 
 
 class SubTask(Base):
@@ -77,9 +78,12 @@ class Attechment(Base):
 
     attechment_id = Column("id", Integer, primary_key=True, autoincrement=True)
     file_path = Column(String(length=255), nullable=False)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"))
 
     create_at = Column(DateTime, default=datetime.now)
     update_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    task = relationship("Task", back_populates="attechments")
 
     def __str__(self):
         return self.attechment_id

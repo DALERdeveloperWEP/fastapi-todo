@@ -6,7 +6,8 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Todo List", version="1.0.0", description="FastAPI Todo List API")
 app.include_router(router, prefix="/api")
-app.mount('/media', StaticFiles(directory='media'), name='media')
+app.mount("/media", StaticFiles(directory="media"), name="media")
+
 
 @app.get("/")
 def abwdbwd():

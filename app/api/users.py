@@ -10,7 +10,6 @@ from ..schemas.user import UserResponse, UserProfile
 from ..api.deps import get_user, get_admin
 
 
-
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
@@ -21,10 +20,8 @@ def get_users(db: Annotated[Session, Depends(get_db)]):
 
 @router.get("/profile", response_model=UserProfile)
 def profile(
-    db: Annotated[Session, Depends(get_db)],
-    user: Annotated[User, Depends(get_user)]
+    db: Annotated[Session, Depends(get_db)], user: Annotated[User, Depends(get_user)]
 ):
-
     result = {
         "task_count": user.tasks.count(),
         "task_todo": user.tasks.filter_by(status=TaskStatus.TODO).count(),

@@ -10,3 +10,9 @@ class CategoryResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CategoryUpdate(BaseModel):
+    name: Annotated[str | None, Field(max_length=64, min_length=3)] = None
+    color: Annotated[str | None, Field(min_length=7, max_length=7)] = None
+    # icon: Annotated[str | None, Field(max_length=255)] = None

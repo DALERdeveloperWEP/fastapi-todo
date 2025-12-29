@@ -4,11 +4,11 @@ import shutil
 from uuid import uuid1
 
 from sqlalchemy.orm import Session
-from fastapi import Body, HTTPException, status, Depends, File, UploadFile, Form
+from fastapi import HTTPException, status, Depends, File, UploadFile, Form
 from fastapi.routing import APIRouter
 
 from ..core.dependencies import get_db
-from ..schemas.categories import CategoryResponse, CategoryUpdate
+from ..schemas.categories import CategoryResponse
 from ..models.user import User
 from ..models.task import Category
 from ..api.deps import get_admin, get_curent_user
@@ -164,6 +164,8 @@ def delete_category(
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found."
         )
+    
+    os.remove(category.icon)
 
     db.delete(category)
     db.commit()

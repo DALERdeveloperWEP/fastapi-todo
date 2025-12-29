@@ -5,6 +5,7 @@ from .users import router as user_router
 from .task import router as tasks_router
 from .categories import router as category_router
 from .subTask import router as subtask_router
+from .attechment import router as attechment_router
 
 router = APIRouter()
 
@@ -13,3 +14,4 @@ router.include_router(user_router)
 router.include_router(tasks_router)
 router.include_router(category_router)
 router.include_router(subtask_router)
+router.include_router(attechment_router)

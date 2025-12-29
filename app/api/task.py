@@ -125,12 +125,7 @@ def update_task(
         )
 
     if task_data.name:
-        exists_name = (
-            db.query(Task)
-            .filter(Task.name == task_data.name, Task.user_id == user.user_id)
-            .first()
-        )
-        if exists_name:
+        if db.query(Task).filter(Task.name == task_data.name, Task.user_id == user.user_id).first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Task with this name already exists.",
@@ -143,13 +138,7 @@ def update_task(
     task.priority = task_data.priority if task_data.priority else task.priority
     task.status = task_data.status if task_data.status else task.status
     if task_data.category_id:
-        exists_category = (
-            db.query(Category)
-            .filter(Category.category_id == task_data.category_id)
-            .first()
-        )
-
-        if not exists_category:
+        if not db.query(Category).filter(Category.category_id == task_data.category_id).first():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Category not found."
             )

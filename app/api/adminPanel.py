@@ -11,7 +11,7 @@ from ..models.task import Task, TaskStatus
 from ..schemas.adminPanel import UserResponse, UserResponseDetalies, UserEditRole
 
 
-router = APIRouter(prefix='/admin', tags=['Admin Panel'])
+router = APIRouter(prefix='/admin', tags=['Admin Panel Check Users'])
 
 @router.get('/users', response_model=List[UserResponse])
 def all_users(

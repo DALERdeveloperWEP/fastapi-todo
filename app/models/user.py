@@ -8,7 +8,6 @@ from ..core.database import Base
 
 
 class Role(str, Enum):
-    OWNER = "owner"
     USER = "user"
     ADMIN = "admin"
 

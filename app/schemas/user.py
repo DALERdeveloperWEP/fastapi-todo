@@ -22,6 +22,9 @@ class UserResponse(BaseModel):
     username: Annotated[str, Field(min_length=5, max_length=64)]
     password: Annotated[str, Field(min_length=8, max_length=128)]
     role: Role
+    
+    class config:
+        from_atributes = True
 
 
 class ProfileResults(BaseModel):

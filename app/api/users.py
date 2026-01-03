@@ -29,5 +29,4 @@ def profile(
         "task_done": user.tasks.filter_by(status=TaskStatus.DONE).count(),
     }
 
-    print({"user": user, "result": result})
     return {"user": user, "result": result}

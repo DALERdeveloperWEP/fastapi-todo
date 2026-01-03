@@ -3,18 +3,21 @@ from typing import Annotated, List
 import shutil
 from uuid import uuid1
 
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Depends, File, UploadFile, Form
 from fastapi.routing import APIRouter
+from supabase import create_client
 
 from ..core.dependencies import get_db
 from ..schemas.categories import CategoryResponse
 from ..models.user import User
 from ..models.task import Category
 from ..api.deps import get_admin, get_curent_user
+from ..core.config import settings
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
-
+supabase = create_client(settings.supabase_url, settings.supabase_key)
 
 @router.post("/", response_model=CategoryResponse)
 def create_categories(
@@ -51,8 +54,21 @@ def create_categories(
 
     icon_path = f"media/icon/{str(uuid1())}.{file_type}"
 
-    with open(icon_path, "wb") as buffer:
-        shutil.copyfileobj(icon.file, buffer)
+    # Save file locally
+    # with open(icon_path, "wb") as buffer:
+    #     shutil.copyfileobj(icon.file, buffer)
+
+    # Upload to Supabase Storage
+    res = supabase.storage.from_("icons").upload(icon_path, icon.file)
+    
+    if res.get('error'):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload icon to storage.",
+        )
+    # Construct the public URL for the uploaded icon
+    icon_path = f"{settings.supabase_url}/storage/v1/object/public/icons/{icon_path.split('/')[-1]}"
+    
 
     new_category = Category(name=name, color=color, icon=icon_path)
 
@@ -140,10 +156,26 @@ def update_category(
 
         icon_path = f"media/icon/{str(uuid1())}.{file_type}"
 
-        with open(icon_path, "wb") as buffer:
-            shutil.copyfileobj(icon.file, buffer)
+        # Save file locally
+        # with open(icon_path, "wb") as buffer:
+        #     shutil.copyfileobj(icon.file, buffer)
 
-        os.remove(category.icon)
+        # Upload to Supabase Storage
+        res = supabase.storage.from_("icons").upload(icon_path, icon.file)
+        if res.get('error'):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload icon to storage.",
+            )
+        
+        # Delete old icon file from local storage
+        # os.remove(category.icon)
+        
+        supabase.storage.from_("icon").remove([category.icon.split('/')[-1]])
+        
+        # Construct the public URL for the uploaded icon
+        icon_path = f"{settings.supabase_url}/storage/v1/object/public/icons/{icon_path.split('/')[-1]}"
+
 
         category.icon = icon_path
 

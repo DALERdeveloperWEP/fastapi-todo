@@ -1,11 +1,14 @@
 import os
 import shutil
 from uuid import uuid1
-from typing import Annotated, Optional
+from typing import Annotated
 
 from sqlalchemy.orm import Session
 from fastapi.routing import APIRouter
 from fastapi import Depends, HTTPException, status, File, UploadFile, Form
+from supabase import create_client
+
+from ..core.config import settings
 from ..models.user import User
 from ..models.task import Task, Attechment
 from ..core.dependencies import get_db
@@ -13,6 +16,8 @@ from .deps import get_user
 from ..schemas.attechment import AttechmentResponse
 
 router = APIRouter(prefix='/attechment', tags=['Attechment'])
+supabase = create_client(settings.supabase_url, settings.supabase_key)
+
 
 @router.post('/')
 def create_attechment(
@@ -40,11 +45,17 @@ def create_attechment(
             detail='File name is too long.'
         )
     
-    with open(create_file_path, 'wb') as f:
-        shutil.copyfileobj(att_file.file, f)
+    # Save file locally
+    # with open(create_file_path, 'wb') as f:
+    #     shutil.copyfileobj(att_file.file, f)
+    
+    # Upload to Supabase Storage
+    supabase.storage.from_('attechment').upload(create_file_path, att_file.file)
+    
+    public_url = supabase.storage.from_('attechment').get_public_url(create_file_path)
     
     new_attechment = Attechment(
-        file_path=create_file_path,
+        file_path=public_url.public_url,
         task_id=task_id
     )
     
@@ -92,5 +103,4 @@ def delete_attechment(
     db.commit()
     
     return {'detail': 'Attechment deleted successfully.'}
-    
     

@@ -13,7 +13,9 @@ __pycache__/
 #media
 media/icon/*
 media/attechment/*
-
+node_modules/
+ui
+index.html
 
 # Distribution / packaging
 .Python

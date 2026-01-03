@@ -12,6 +12,7 @@ url = URL.create(
     database=settings.db_name,
 )
 
-engine = create_engine(url=url)
+# engine = create_engine(url=url) # local database connection string
+engine = create_engine(url=settings.database_url) # supabase database connection string
 Base: DeclarativeBase = declarative_base()
 SessionLocal = sessionmaker(bind=engine)

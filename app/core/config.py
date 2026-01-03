@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     db_name: str
     db_user: str
 
+    database_url: str
+    supabase_url: str
+    supabase_key: str
+    
     jwt_secret: str
     jwt_algorithm: str
 

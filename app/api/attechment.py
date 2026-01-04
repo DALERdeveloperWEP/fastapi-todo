@@ -1,6 +1,7 @@
 import os
 import shutil
 from uuid import uuid1
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from sqlalchemy.orm import Session
@@ -16,7 +17,7 @@ from .deps import get_user
 from ..schemas.attechment import AttechmentResponse
 
 router = APIRouter(prefix='/attechment', tags=['Attechment'])
-supabase = create_client(settings.supabase_url, settings.supabase_key)
+supabase = create_client(supabase_url=settings.supabase_url, supabase_key=settings.supabase_key)
 
 
 @router.post('/')
@@ -37,7 +38,7 @@ def create_attechment(
         
     get_file_type = att_file.filename[::-1].split('.')[0][::-1]
     
-    create_file_path = f'media/attechment/{uuid1()}.{get_file_type}'
+    create_file_path = f'{uuid1()}.{get_file_type}'
     
     if len(create_file_path) >= 255:
         raise HTTPException(
@@ -50,9 +51,9 @@ def create_attechment(
     #     shutil.copyfileobj(att_file.file, f)
     
     # Upload to Supabase Storage
-    supabase.storage.from_('attechment').upload(create_file_path, att_file.file)
+    supabase.storage.from_('Attechments').upload(create_file_path, att_file.file)
     
-    public_url = supabase.storage.from_('attechment').get_public_url(create_file_path)
+    public_url = supabase.storage.from_('Attechments').get_public_url(create_file_path)
     
     new_attechment = Attechment(
         file_path=public_url.public_url,
@@ -80,8 +81,17 @@ def get_one_attechment(
             detail='Attechment not found'
         )
     
-    return attechment
-    
+    expire_time = datetime.now() + timedelta(days=31)
+    expires_in = int((expire_time - datetime.now()).total_seconds())
+
+    signed_url = supabase.storage.from_('Attechments').create_signed_url(attechment.file_path, expires_in)
+
+    return AttechmentResponse(
+        attechment_id=attechment.attechment_id,
+        file_path=signed_url,
+        task_id=attechment.task_id
+    )
+
 
 @router.delete('/{pk}')
 def delete_attechment(
@@ -97,7 +107,11 @@ def delete_attechment(
             detail='Attechment not found'
         )
     
-    os.remove(get_att_file.file_path)
+    # Delete locally
+    # os.remove(get_att_file.file_path)
+    
+    # Delete from Supabase Storage
+    supabase.storage.from_('Attechments').remove([get_att_file.file_path])    
     
     db.delete(get_att_file)
     db.commit()

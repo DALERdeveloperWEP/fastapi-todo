@@ -5,6 +5,7 @@ from uuid import uuid1
 
 
 from sqlalchemy.orm import Session
+from storage3.exceptions import StorageApiError
 from fastapi import HTTPException, status, Depends, File, UploadFile, Form
 from fastapi.routing import APIRouter
 from supabase import create_client
@@ -17,7 +18,7 @@ from ..api.deps import get_admin, get_curent_user
 from ..core.config import settings
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
-supabase = create_client(settings.supabase_url, settings.supabase_key)
+supabase = create_client(supabase_key=settings.supabase_key, supabase_url=settings.supabase_url)
 
 @router.post("/", response_model=CategoryResponse)
 def create_categories(
@@ -52,31 +53,36 @@ def create_categories(
             status_code=status.HTTP_400_BAD_REQUEST, detail="File type is not supported"
         )
 
-    icon_path = f"media/icon/{str(uuid1())}.{file_type}"
+    icon_path = f"icon/{str(uuid1())}.{file_type}"
 
     # Save file locally
     # with open(icon_path, "wb") as buffer:
     #     shutil.copyfileobj(icon.file, buffer)
 
     # Upload to Supabase Storage
-    res = supabase.storage.from_("icons").upload(icon_path, icon.file)
-    
-    if res.get('error'):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload icon to storage.",
+    try:
+        res = supabase.storage.from_("media").upload(
+            icon_path,
+            icon.file.read(),
+            {"content-type": icon.content_type}
         )
-    # Construct the public URL for the uploaded icon
-    icon_path = f"{settings.supabase_url}/storage/v1/object/public/icons/{icon_path.split('/')[-1]}"
-    
+    except StorageApiError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
 
     new_category = Category(name=name, color=color, icon=icon_path)
-
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
 
-    return new_category
+    return CategoryResponse(
+        category_id=new_category.category_id,
+        name=new_category.name,
+        color=new_category.color,
+        icon=f"https://ffqzvugwuogmwjtmyquj.supabase.co/storage/v1/object/public/media/{icon_path}"
+    )
 
 
 @router.get("/", response_model=List[CategoryResponse])
@@ -84,7 +90,18 @@ def get_category_list(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_curent_user)],
 ) -> List[CategoryResponse]:
-    return db.query(Category).all()
+    categories = db.query(Category).all()
+    result = []
+    
+    for category in categories:
+        signed_url = supabase.storage.from_("media").get_public_url(category.icon)
+        result.append(CategoryResponse(
+            category_id=category.category_id,
+            name=category.name,
+            color=category.color,
+            icon=signed_url
+        ))
+    return result
 
 
 @router.get("/{pk}", status_code=status.HTTP_200_OK, response_model=CategoryResponse)
@@ -98,7 +115,14 @@ def get_one_category(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found."
         )
-    return category
+    signed_url = supabase.storage.from_("media").get_public_url(category.icon)
+    
+    return CategoryResponse(
+        category_id=category.category_id,
+        name=category.name,
+        color=category.color,
+        icon=signed_url
+    )
 
 
 @router.put("/{pk}", status_code=status.HTTP_200_OK, response_model=CategoryResponse)
@@ -154,34 +178,40 @@ def update_category(
                 detail="File type is not supported",
             )
 
-        icon_path = f"media/icon/{str(uuid1())}.{file_type}"
+        icon_path = f"icon/{str(uuid1())}.{file_type}"
 
         # Save file locally
         # with open(icon_path, "wb") as buffer:
         #     shutil.copyfileobj(icon.file, buffer)
 
         # Upload to Supabase Storage
-        res = supabase.storage.from_("icons").upload(icon_path, icon.file)
-        if res.get('error'):
+        try:
+            res = supabase.storage.from_("media").upload(
+                icon_path,
+                icon.file.read(),
+                {"content-type": icon.content_type}
+            )
+        except StorageApiError as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to upload icon to storage.",
+                status_code=400,
+                detail=str(e)
             )
         
         # Delete old icon file from local storage
         # os.remove(category.icon)
         
-        supabase.storage.from_("icon").remove([category.icon.split('/')[-1]])
-        
-        # Construct the public URL for the uploaded icon
-        icon_path = f"{settings.supabase_url}/storage/v1/object/public/icons/{icon_path.split('/')[-1]}"
-
+        supabase.storage.from_("media").remove([category.icon.split('/')[-1]])
 
         category.icon = icon_path
 
     db.commit()
     db.refresh(category)
-    return category
+    return CategoryResponse(
+        category_id=category.category_id,
+        name=category.name,
+        color=category.color,
+        icon=f"https://ffqzvugwuogmwjtmyquj.supabase.co/storage/v1/object/public/media/{category.icon}"
+    )
 
 
 @router.delete("/{pk}", status_code=status.HTTP_204_NO_CONTENT)
@@ -197,8 +227,12 @@ def delete_category(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found."
         )
     
-    os.remove(category.icon)
-
+    # Delete icon file from local storage
+    # os.remove(category.icon)
+    
+    # Delete icon file from Supabase Storage
+    supabase.storage.from_("media").remove([category.icon.split('https://ffqzvugwuogmwjtmyquj.supabase.co/storage/v1/object/public/media/')[-1]])
+    
     db.delete(category)
     db.commit()
     return {"detail": "Category deleted successfully."}

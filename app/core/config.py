@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     database_url: str
     supabase_url: str
     supabase_key: str
+    supabase_storage_url: str
     
     jwt_secret: str
     jwt_algorithm: str

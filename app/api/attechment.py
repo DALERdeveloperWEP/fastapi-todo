@@ -56,6 +56,7 @@ def create_attechment(
     public_url = supabase.storage.from_('Attechments').get_public_url(create_file_path)
     
     new_attechment = Attechment(
+        user_id=user.user_id,
         file_path=public_url.public_url,
         task_id=task_id
     )

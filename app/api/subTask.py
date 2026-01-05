@@ -37,8 +37,9 @@ def create_subtask(
     
     
     new_subtask = SubTask(
+        user_id=user.user_id,
         name=data.name,
-        description = data.description,
+        description=data.description,
         task_id=data.task_id
     )
     

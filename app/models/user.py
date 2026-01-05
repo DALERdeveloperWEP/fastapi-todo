@@ -21,6 +21,8 @@ class User(Base):
     role = Column(SQLEnum(Role), default=Role.USER, nullable=False)
 
     tasks = relationship("Task", back_populates="user", lazy="dynamic")
+    sub_tasks = relationship("SubTask", back_populates="user", lazy="dynamic")
+    attechments = relationship("Attechment", back_populates="user", lazy="dynamic")
 
     create_at = Column(DateTime, default=datetime.now)
     update_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

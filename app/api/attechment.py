@@ -74,7 +74,20 @@ def get_user_attechments(
     db: Annotated[Session, Depends(get_db)]
 ):
     attechments = db.query(Attechment).filter(Attechment.user_id==user.user_id).all()
-    return attechments
+    
+    result = []
+    
+    for attechment in attechments:
+        expire_time = datetime.now() + timedelta(days=31)
+        expires_in = int((expire_time - datetime.now()).total_seconds())
+
+        signed_url = supabase.storage.from_('Attechments').create_signed_url(attechment.file_path, expires_in)
+        
+        result.append(AttechmentResponse(
+            attechment_id=attechment.attechment_id,
+            file_path=signed_url,
+            task_id=attechment.task_id
+        ))
 
 
 @router.get('/{pk}')

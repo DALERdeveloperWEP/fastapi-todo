@@ -88,6 +88,8 @@ def get_user_attechments(
             file_path=signed_url,
             task_id=attechment.task_id
         ))
+    
+    return result
 
 
 @router.get('/{pk}')

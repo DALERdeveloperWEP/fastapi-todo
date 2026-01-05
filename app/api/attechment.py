@@ -51,13 +51,13 @@ def create_attechment(
     #     shutil.copyfileobj(att_file.file, f)
     
     # Upload to Supabase Storage
-    supabase.storage.from_('Attechments').upload(create_file_path, att_file.file)
+    supabase.storage.from_('Attechments').upload(create_file_path, att_file.file.read())
     
-    public_url = supabase.storage.from_('Attechments').get_public_url(create_file_path)
+    public_url = supabase.storage.from_('Attechments').create_signed_url(create_file_path, 60*60*24*31)
     
     new_attechment = Attechment(
         user_id=user.user_id,
-        file_path=public_url.public_url,
+        file_path=create_file_path,
         task_id=task_id
     )
     
@@ -65,7 +65,11 @@ def create_attechment(
     db.commit()
     db.refresh(new_attechment)
     
-    return new_attechment
+    return AttechmentResponse(
+        attechment_id=new_attechment.attechment_id,
+        file_path=public_url['signedURL'],
+        task_id=new_attechment.task_id
+    )
     
 
 @router.get('/user_attechments', response_model=list[AttechmentResponse])
@@ -85,7 +89,7 @@ def get_user_attechments(
         
         result.append(AttechmentResponse(
             attechment_id=attechment.attechment_id,
-            file_path=signed_url,
+            file_path=signed_url['signedURL'],
             task_id=attechment.task_id
         ))
     

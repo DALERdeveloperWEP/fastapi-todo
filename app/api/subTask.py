@@ -50,6 +50,15 @@ def create_subtask(
     return new_subtask
 
 
+@router.get('/user_subtasks', response_model=list[SubTaskResponse])
+def get_user_sub_tasks(
+    user: Annotated[User, Depends(get_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    sub_tasks = db.query(SubTask).filter(SubTask.user_id==user.user_id).all()
+    return sub_tasks
+
+
 @router.put('/{pk}', response_model=SubTaskResponse)
 def update_subtask(
     pk: int,
@@ -112,15 +121,6 @@ def get_one_sub_task(
         
         
     return sub_task
-
-
-@router.get('/user_subtasks', response_model=list[SubTaskResponse])
-def get_user_sub_tasks(
-    user: Annotated[User, Depends(get_user)],
-    db: Annotated[Session, Depends(get_db)]
-):
-    sub_tasks = db.query(SubTask).filter(SubTask.user_id==user.user_id).all()
-    return sub_tasks
 
  
 @router.delete('/{pk}', response_model=dict)

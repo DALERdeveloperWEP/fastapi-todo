@@ -68,6 +68,15 @@ def create_attechment(
     return new_attechment
     
 
+@router.get('/user_attechments', response_model=list[AttechmentResponse])
+def get_user_attechments(
+    user: Annotated[User, Depends(get_user)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    attechments = db.query(Attechment).filter(Attechment.user_id==user.user_id).all()
+    return attechments
+
+
 @router.get('/{pk}')
 def get_one_attechment(
     pk: int,
@@ -92,15 +101,6 @@ def get_one_attechment(
         file_path=signed_url,
         task_id=attechment.task_id
     )
-
-
-@router.get('/user_attechments', response_model=list[AttechmentResponse])
-def get_user_attechments(
-    user: Annotated[User, Depends(get_user)],
-    db: Annotated[Session, Depends(get_db)]
-):
-    attechments = db.query(Attechment).filter(Attechment.user_id==user.user_id).all()
-    return attechments
 
 
 @router.delete('/{pk}')
